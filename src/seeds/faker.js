@@ -38,7 +38,7 @@ generateFakeData = async (userCount, postsPerUser, commentsPerUser) => {
           title: faker.lorem.words(),
           content: faker.lorem.paragraphs(),
           islive: true,
-          user,
+          user: user.toObject(),
         })
       );
     }
@@ -50,7 +50,7 @@ generateFakeData = async (userCount, postsPerUser, commentsPerUser) => {
       comments.push(
         new Comment({
           content: faker.lorem.sentence(),
-          user,
+          user: user.toObject(),
           post: posts[index]._id,
         })
       );
