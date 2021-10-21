@@ -2,7 +2,8 @@ const express = require("express");
 const app = express();
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const { userRouter } = require('./routes/userRoute')
+const { userRouter } = require('./routes/userRoute');
+const { postRouter } = require("./routes/postRoute");
 dotenv.config();
 
 app.use(express.json());
@@ -12,6 +13,7 @@ mongoose.connect(MONGO_URI);
 mongoose.set('debug', true);
 
 app.use('/user', userRouter);
+app.use('/post', postRouter);
 app.listen(3000, () => console.log("서버 가동"));
 
 module.exports = app;
