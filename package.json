@@ -5,7 +5,7 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
+    "dev": "nodemon --ignore client/index.js src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/pinion7/NoSQL-start#readme",
   "dependencies": {
+    "axios": "^0.23.0",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "faker": "^5.5.3",

@@ -4,7 +4,7 @@ const { isValidObjectId } = require("mongoose");
 module.exports = {
   findAll: async (req, res) => {
     try {
-      const posts = await Post.find();
+      const posts = await Post.find().limit(10);
       return res.status(200).json({ posts });
     } catch (err) {
       return res.status(500).json({ message: err.message });
