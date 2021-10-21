@@ -1,4 +1,4 @@
-const { User } = require("../models");
+const { User, Post, Comment } = require("../models");
 const { isValidObjectId } = require("mongoose");
 
 module.exports = {
@@ -26,6 +26,7 @@ module.exports = {
 
   createOne: async (req, res) => {
     try {
+      console.log(req.body);
       const { username, name, age } = req.body;
       if (!username) {
         return res.status(400).json({ message: "username이 필요합니다" });
@@ -36,6 +37,7 @@ module.exports = {
           .json({ message: "first, last가 모두 필요합니다." });
       }
       const user = new User({ username, name, age });
+      console.log(user);
       await user.save();
       return res.send({ user });
     } catch (err) {
@@ -64,8 +66,21 @@ module.exports = {
       }
 
       const updateBody = {};
-      if (age) updateBody.age = age;
-      if (name) updateBody.name = name;
+      if (age) {
+        updateBody.age = age;
+      }
+      if (name) {
+        updateBody.name = name;
+        await Promise.all([
+          Post.updateMany({ "user._id": userId }, { "user.name": name }),
+          Post.updateMany(
+            {},
+            { "comments.$[el].user.name": name },
+            { arrayFilters: [{ "el.user._id": userId }] }
+          ),
+          Comment.updateMany({ "user._id": userId }, { "user.name": name }),
+        ]);
+      }
       // $set은 써도되고 안써도 됨. 즉, 몽구스 스스로 두번째인자를 알아서 업데이트 대상으로 인식한다
       await User.updateOne({ _id: userId }, updateBody);
       return res
@@ -82,9 +97,22 @@ module.exports = {
       // 일단 db에서 user를 찾고, 값을 바꿔준다음에. save()를 활용하여 업데이트 해줄 수 있다.
       // 아래처럼 작성할 경우, save() 메소드가 알아서 바뀐 값만 updateOne 쿼리를 진행해준다.
       // const user = await User.findById(userId);
-      // if (age) user.age = age;
-      // if (name) user.name = name;
-      // user.save();
+      // if (age) {
+      //   user.age = age;
+      // }
+      // if (name) {
+      //   user.name = name;
+      //   await Promise.all([
+      //     Post.updateMany({ "user._id": userId }, { "user.name": name }),
+      //     Post.updateMany(
+      //       {},
+      //       { "comments.$[el].user.name": name },
+      //       { arrayFilters: [{ "el.user._id": userId }] }
+      //     ),
+      //     Comment.updateMany({ "user._id": userId }, { "user.name": name }),
+      //   ]);
+      // }
+      // await user.save();
       // return res.status(200).json({ user });
     } catch (err) {
       return res.status(500).json({ message: "서버 에러" });
@@ -97,7 +125,16 @@ module.exports = {
       if (!isValidObjectId(userId)) {
         return res.status(400).json({ message: "userId가 유효하지 않습니다." });
       }
-      await User.deleteOne({ _id: userId });
+
+      await Promise.all([
+        User.deleteOne({ _id: userId }),
+        Post.deleteMany({ "user._id": userId }),
+        Post.updateMany(
+          { "comments.user._id": userId },
+          { $pull: { comments: { user: userId } } }
+        ),
+        Comment.deleteMany({ "user._id": userId }),
+      ]);
       return res.status(200).json({ messsage: "user 삭제에 성공하였습니다." });
     } catch (err) {
       return res.status(500).json({ message: "서버 에러" });
