@@ -2,10 +2,10 @@
   "name": "nosql-start",
   "version": "1.0.0",
   "description": "nosql-practice",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,7 +19,9 @@
   },
   "homepage": "https://github.com/pinion7/NoSQL-start#readme",
   "dependencies": {
-    "express": "^4.17.1"
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "mongoose": "^6.0.11"
   },
   "devDependencies": {
     "nodemon": "^2.0.14"
