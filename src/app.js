@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const { userRouter } = require('./routes/userRoute');
 const { postRouter } = require("./routes/postRoute");
+const { commentRouter } = require("./routes/commentRoute");
 dotenv.config();
 
 app.use(express.json());
@@ -14,6 +15,8 @@ mongoose.set('debug', true);
 
 app.use('/user', userRouter);
 app.use('/post', postRouter);
+app.use('/post/:postId/comment', commentRouter);
+
 app.listen(3000, () => console.log("서버 가동"));
 
 module.exports = app;

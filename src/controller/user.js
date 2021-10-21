@@ -41,7 +41,7 @@ module.exports = {
     }
   },
 
-  updateOne: async (req, res) => {
+  updateAll: async (req, res) => {
     try {
       const { userId } = req.params;
       const { age, name } = req.body;
