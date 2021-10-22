@@ -4,7 +4,7 @@ const CommentSchema = new Schema(
   {
     content: { type: String, required: true },
     user: {
-      _id: { type: Types.ObjectId, required: true, ref: "user" },
+      _id: { type: Types.ObjectId, required: true, ref: "user", index: true },
       username: { type: String, required: true },
       name: {
         first: { type: String, required: true },

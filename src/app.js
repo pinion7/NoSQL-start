@@ -19,7 +19,7 @@ app.use("/post/:postId/comment", commentRouter);
 app.listen(3000, async () => {
   console.log("서버 가동");
   // for (let i = 0; i < 5; ++i) {
-  //   generateFakeData(3, 10, 20);
+  // generateFakeData(10, 5, 10);
   // }
 });
 

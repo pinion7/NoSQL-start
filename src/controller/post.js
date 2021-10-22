@@ -4,13 +4,24 @@ const { isValidObjectId } = require("mongoose");
 module.exports = {
   findAll: async (req, res) => {
     try {
-      const posts = await Post.find({}).limit(200);
+      // 쿼리로 페이지네이션을 구현할 수 있음
+      // 시작 page 값에따라 skip 및 limit을 적용함. 그리고 최신업데이트된 게시글 순으로 반환함
+      let { page } = req.query;
+      if (page) {
+        page = parseInt(page);
+        const posts = await Post.find({})
+          .sort({ updatedAt: -1 })
+          .skip(page * 3)
+          .limit(3);
+        return res.status(200).json({ posts });
+      }
+      const posts = await Post.find({});
+      return res.status(200).json({ posts });
       // .select('title content')
       // .populate([
       //   { path: "user" },
       //   { path: "comments", populate: { path: "user" } },
       // ]);
-      return res.status(200).json({ posts });
     } catch (err) {
       return res.status(500).json({ message: "서버 에러" });
     }

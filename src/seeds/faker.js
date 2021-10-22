@@ -20,7 +20,8 @@ generateFakeData = async (userCount, postsPerUser, commentsPerUser) => {
   for (let i = 0; i < userCount; i++) {
     users.push(
       new User({
-        username: faker.internet.userName() + parseInt(Math.random() * 100),
+        username:
+          faker.internet.userName() + parseInt(Math.random() * 10000000),
         name: {
           first: faker.name.firstName(),
           last: faker.name.lastName(),
@@ -31,39 +32,39 @@ generateFakeData = async (userCount, postsPerUser, commentsPerUser) => {
     );
   }
 
-  users.map((user) => {
-    for (let i = 0; i < postsPerUser; i++) {
-      posts.push(
-        new Post({
-          title: faker.lorem.words(),
-          content: faker.lorem.paragraphs(),
-          islive: true,
-          user: user.toObject(),
-        })
-      );
-    }
-  });
+  // users.map((user) => {
+  //   for (let i = 0; i < postsPerUser; i++) {
+  //     posts.push(
+  //       new Post({
+  //         title: faker.lorem.words(),
+  //         content: faker.lorem.paragraphs(),
+  //         islive: true,
+  //         user: user.toObject(),
+  //       })
+  //     );
+  //   }
+  // });
 
-  users.map((user) => {
-    for (let i = 0; i < commentsPerUser; i++) {
-      let index = Math.floor(Math.random() * posts.length);
-      comments.push(
-        new Comment({
-          content: faker.lorem.sentence(),
-          user: user.toObject(),
-          post: posts[index]._id,
-        })
-      );
-    }
-  });
+  // users.map((user) => {
+  //   for (let i = 0; i < commentsPerUser; i++) {
+  //     let index = Math.floor(Math.random() * posts.length);
+  //     comments.push(
+  //       new Comment({
+  //         content: faker.lorem.sentence(),
+  //         user: user.toObject(),
+  //         post: posts[index]._id,
+  //       })
+  //     );
+  //   }
+  // });
 
   console.log("fake 데이터가 db에 입력됩니다.");
   await User.insertMany(users);
   console.log(`${users.length}개의 fake 유저가 생성되었습니다!`);
-  await Post.insertMany(posts);
-  console.log(`${posts.length}개의 fake 게시글이 생성되었습니다!`);
-  await Comment.insertMany(comments);
-  console.log(`${comments.length}개의 fake 댓글이 생성되었습니다!`);
+  // await Post.insertMany(posts);
+  // console.log(`${posts.length}개의 fake 게시글이 생성되었습니다!`);
+  // await Comment.insertMany(comments);
+  // console.log(`${comments.length}개의 fake 댓글이 생성되었습니다!`);
   console.log("작업이 모두 완료되었습니다.");
 };
 
