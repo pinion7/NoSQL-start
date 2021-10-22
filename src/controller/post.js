@@ -1,4 +1,4 @@
-const { User, Post } = require("../models");
+const { User, Post, Comment } = require("../models");
 const { isValidObjectId } = require("mongoose");
 
 module.exports = {
@@ -6,12 +6,11 @@ module.exports = {
     try {
       // 쿼리로 페이지네이션을 구현할 수 있음
       // 시작 page 값에따라 skip 및 limit을 적용함. 그리고 최신업데이트된 게시글 순으로 반환함
-      let { page } = req.query;
+      const { page } = req.query;
       if (page) {
-        page = parseInt(page);
         const posts = await Post.find({})
           .sort({ updatedAt: -1 })
-          .skip(page * 3)
+          .skip(parseInt(page) * 3)
           .limit(3);
         return res.status(200).json({ posts });
       }
@@ -34,6 +33,11 @@ module.exports = {
         return res.status(400).json({ message: "postId가 유효하지 않습니다." });
       }
       const post = await Post.findOne({ _id: postId });
+      // 해당 게시글에 포함되는 댓글 개수 호출하는 방법
+      // const commentsCount = await Comment.find({
+      //   post: postId,
+      // }).countDocuments();
+
       return res.status(200).json({ post });
     } catch (err) {
       return res.status(500).json({ message: "서버 에러" });

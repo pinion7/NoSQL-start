@@ -16,6 +16,8 @@ const CommentSchema = new Schema(
   { timestamps: true }
 );
 
+CommentSchema.index({ post: 1, createdAt: -1 });
+
 const Comment = model("comment", CommentSchema);
 
 module.exports = { Comment };

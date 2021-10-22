@@ -1,12 +1,20 @@
 const { User, Post, Comment } = require("../models");
-const { isValidObjectId } = require("mongoose");
+const { isValidObjectId, startSession } = require("mongoose");
 
 module.exports = {
   findAll: async (req, res) => {
     try {
+      const { page } = req.query;
       const { postId } = req.params;
       if (!isValidObjectId(postId)) {
         return res.status(400).json({ message: "postId가 유효하지 않습니다." });
+      }
+      if (page) {
+        const comments = await Comment.find({ post: postId })
+          .sort({ createdAt: -1 })
+          .skip(parseInt(page) * 3)
+          .limit(3);
+        return res.status(200).json({ comments });
       }
       const comments = await Comment.find({ post: postId });
       return res.status(200).json({ comments });
@@ -16,39 +24,87 @@ module.exports = {
   },
 
   createOne: async (req, res) => {
+    const session = await startSession();
+    let comment;
     try {
-      const { postId } = req.params;
-      const { content, userId } = req.body;
-      if (!isValidObjectId(postId)) {
-        return res.status(400).json({ message: "postId가 유효하지 않습니다." });
-      }
-      if (!isValidObjectId(userId)) {
-        return res.status(400).json({ message: "userId가 유효하지 않습니다." });
-      }
-      if (typeof content !== "string") {
-        return res.status(400).json({ message: "content를 입력해야 합니다." });
-      }
+      await session.withTransaction(async () => {
+        const { postId } = req.params;
+        const { content, userId } = req.body;
+        if (!isValidObjectId(postId)) {
+          return res
+            .status(400)
+            .json({ message: "postId가 유효하지 않습니다." });
+        }
+        if (!isValidObjectId(userId)) {
+          return res
+            .status(400)
+            .json({ message: "userId가 유효하지 않습니다." });
+        }
+        if (typeof content !== "string") {
+          return res
+            .status(400)
+            .json({ message: "content를 입력해야 합니다." });
+        }
 
-      const [user, post] = await Promise.all([
-        User.findById(userId),
-        Post.findById(postId),
-      ]);
-      if (!user || !post) {
-        return res
-          .status(400)
-          .json({ message: "user 혹은 post가 존재하지 않습니다." });
-      }
-      if (!post.islive) {
-        return res.status(400).json({ message: "비공개 post입니다." });
-      }
-      const comment = new Comment({ content, user: user.toObject(), post });
-      await Promise.all([
-        comment.save(),
-        Post.updateOne({ _id: postId }, { $push: { comments: comment } }),
-      ]);
+        const [user, post] = await Promise.all([
+          User.findById(userId, {}, { session }),
+          Post.findById(postId, {}, { session }),
+        ]);
+        if (!user || !post) {
+          return res
+            .status(400)
+            .json({ message: "user 혹은 post가 존재하지 않습니다." });
+        }
+        if (!post.islive) {
+          return res.status(400).json({ message: "비공개 post입니다." });
+        }
+        comment = new Comment({
+          content,
+          user: user.toObject(),
+          post: postId,
+        });
+
+        // post에 모든 댓글을 내장하는 게 아닐, 댓글이 추가될때마다 오래된 댓글은 제거해서 post에 내장하는 방법
+        // 장점: 최신댓글만 볼 수 있고, comment에는 모든 게 다 저장되기 때문에 원하면 페이지네이션을 통해 다음 코멘트 확인 가능
+        ++post.commentsCount;
+        post.comments.push(comment);
+        if (post.commentsCount > 3) {
+          post.comments.shift();
+        }
+        await Promise.all([
+          comment.save({ session }),
+          post.save(),
+          // Post.updateOne(
+          //   { _id: postId },
+          //   { $push: { comments: comment }, $inc: { commentsCount: 1 } }
+          // ),
+        ]);
+
+        //
+      });
+      // ※ 참고사항
+      // abortTransaction()을 하면 지금까지 session안에서 수행된 모든 것들이 취소됨
+      // await session.abortTransaction();
+      // 그리고 사실 이 호출에 대해서는 transaction을 사용하지 않고 내장을 잘해도 괜찮음
+      // Atomicity는 못지키지만 그럴일이 발생할 확률이 낮기 때문. 즉, 상황에따라 써야지 무조건쓰면 효율이 낮음
+      // 암튼 위와 같은 경우엔 아래와 같은 코드가 효율적 (transaction 관련 코드 다지우고 적용하면 됨)
+      // await Promise.all([
+      //   comment.save(),
+      //   Post.updateOne(
+      //     { _id: postId },
+      //     {
+      //       $inc: { commentsCount: 1 },
+      //       // 이거랑 아래꺼랑 같은처리인데 아래꺼가 병렬처리되서 더 효율 좋은 코드
+      //       // $push: { comments: comment },
+      //       $push: { comments: { $each: [comment], $slice: -3 } },
+      //     }
+      //   ),
+      // ]);
       return res.status(201).json({ comment });
     } catch (err) {
       return res.status(500).json({ message: "서버 에러" });
+    } finally {
+      await session.endSession();
     }
   },
 

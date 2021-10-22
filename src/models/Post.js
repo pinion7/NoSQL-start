@@ -18,7 +18,12 @@ const PostSchema = new Schema(
       {
         content: { type: String, required: true },
         user: {
-          _id: { type: Types.ObjectId, required: true, ref: "user" },
+          _id: {
+            type: Types.ObjectId,
+            required: true,
+            ref: "user",
+            index: true,
+          },
           username: { type: String, required: true },
           name: {
             first: { type: String, required: true },
@@ -27,6 +32,7 @@ const PostSchema = new Schema(
         },
       },
     ],
+    commentsCount: { type: Number, default: 0, required: true },
   },
   { timestamps: true }
 );
