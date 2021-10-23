@@ -7,9 +7,16 @@ const { generateFakeData } = require("./seeds/newFaker");
 dotenv.config();
 
 app.use(express.json());
-const MONGO_URI = `mongodb+srv://mandos:${process.env.MONGO_PASSWORD}@cluster0.wikwi.mongodb.net/MongoBlog?retryWrites=true&w=majority`;
 
-mongoose.connect(MONGO_URI);
+// 옵션 추가
+mongoose
+  .connect(process.env.MONGO_STRING, {
+    // useNewUrlParser: true, // 버전 5 이상부터 적용되는 새로운 url parser 사용
+    useUnifiedTopology: true, // shard 와 replica set 에 접근
+    // dbName: process.env.MONGO_DATABASE_NAME, // connection string 에 있는 db 대신 다른 디폴트 db 지정
+  })
+  .then(() => console.log("mongoDB 연결 성공"))
+  .catch((err) => console.error("mongoDB 연결 실패"));
 // mongoose.set("debug", true);
 
 app.use("/user", userRouter);
